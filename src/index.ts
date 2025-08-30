@@ -1,7 +1,9 @@
-import path, { dirname } from "path";
+import path, { dirname, relative } from "path";
 import { getArgs } from "./args";
 import { $, Glob } from "bun";
 import { compressInPlace, sha256HashFile } from "./file";
+import type { Stats } from "fs";
+import { CODEC, QUALITY } from "./constants";
 
 const args = await getArgs();
 
@@ -12,19 +14,28 @@ if (args.clean) {
   await $`mkdir ${args.clone}`;
 }
 
-const sourceFiles = new Glob("**/*").scan(args.source);
-
 type ManifestItem = {
   path: string;
+  stats: Record<string, unknown>;
   sha256: string;
-  sizeMB: number;
 };
 
-const manifest: ManifestItem[] = [];
+const manifest = {
+  handbrake: {
+    cliVersion: (await $`HandBrakeCLI --version | grep -i HandBrake`)
+      .text()
+      .trim(),
+    quality: QUALITY,
+    codec: CODEC,
+    note: "Most of the original video metadata is preserved (framerate, subtitles, resolution) it is just some lossy compression.",
+  },
+  date: new Date().toISOString(),
+  meta: [] as ManifestItem[],
+};
 
 console.log("Starting the compression of media...");
 
-for await (const sourceFile of sourceFiles) {
+for await (const sourceFile of new Glob("**/*").scan(args.source)) {
   console.log(`Processing ${sourceFile}`);
 
   const sourceFilePath = path.join(args.source, sourceFile);
@@ -37,20 +48,30 @@ for await (const sourceFile of sourceFiles) {
 
 console.log("Generating a manifest file...");
 
-const cloneDir = new Glob("*/**").scan(args.clone);
-
-for await (const clonedFile of cloneDir) {
+for await (const clonedFile of new Glob("*/**").scan(args.clone)) {
   const clonedFilePath = path.join(args.clone, clonedFile);
+  const originalFilePath = path.join(
+    args.source,
+    relative("files", clonedFile)
+  );
 
   console.log(`Calculating meta for ${clonedFilePath}`);
 
   const sha256 = await sha256HashFile(clonedFilePath);
-  const sizeMB = Bun.file(clonedFilePath).size / 1000 ** 2;
+  const stat = await Bun.file(originalFilePath).stat();
 
-  manifest.push({
+  manifest.meta.push({
     path: clonedFile,
+    stats: {
+      ...stat,
+      atime: new Date(stat.atimeMs),
+      ctime: new Date(stat.ctimeMs),
+      mtime: new Date(stat.mtimeMs),
+      birthtime: new Date(stat.birthtimeMs),
+      size: stat.size,
+      sizeMeasurement: "bytes",
+    },
     sha256,
-    sizeMB,
   });
 }
 
