@@ -13,6 +13,10 @@ const { values } = parseArgs({
     clone: {
       type: "string",
     },
+    clean: {
+      type: "boolean",
+      default: false,
+    },
   },
   strict: true,
   allowPositionals: true,
@@ -21,6 +25,7 @@ const { values } = parseArgs({
 const argsSchema = z.object({
   source: z.string({ error: "Invalid source path" }).superRefine(zodVerifyPath),
   clone: z.string().superRefine(zodVerifyPath),
+  clean: z.boolean(),
 });
 
 export async function getArgs(): Promise<z.infer<typeof argsSchema>> {
