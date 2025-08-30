@@ -23,11 +23,8 @@ export async function fileOrDirExists(path: string): Promise<boolean> {
   }
 }
 
-export async function zodVerifyPath(
-  path: string,
-  ctx: z.core.$RefinementCtx<string>
-) {
-  const exists = await fileOrDirExists(path);
+export async function zodVerifyPath<T>(path: T, ctx: z.core.$RefinementCtx<T>) {
+  const exists = typeof path === "string" && (await fileOrDirExists(path));
 
   if (!exists) {
     ctx.addIssue({

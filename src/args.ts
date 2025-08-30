@@ -10,9 +10,8 @@ const { values } = parseArgs({
       type: "string",
       short: "s",
     },
-    glob: {
+    clone: {
       type: "string",
-      short: "g",
     },
   },
   strict: true,
@@ -21,10 +20,7 @@ const { values } = parseArgs({
 
 const argsSchema = z.object({
   source: z.string({ error: "Invalid source path" }).superRefine(zodVerifyPath),
-  glob: z
-    .string()
-    .default("**/*")
-    .transform((value) => new Glob(value)),
+  clone: z.string().superRefine(zodVerifyPath),
 });
 
 export async function getArgs(): Promise<z.infer<typeof argsSchema>> {
