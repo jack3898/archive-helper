@@ -1,11 +1,7 @@
 import path, { dirname, relative } from "path";
-import { getArgs } from "./args";
+import { args } from "./args";
 import { $, Glob } from "bun";
 import { compressInPlace, sha256HashFile } from "./file";
-import type { Stats } from "fs";
-import { CODEC, QUALITY } from "./constants";
-
-const args = await getArgs();
 
 const newFilesDir = path.join(args.clone, "files");
 
@@ -25,8 +21,8 @@ const manifest = {
     cliVersion: (await $`HandBrakeCLI --version | grep -i HandBrake`)
       .text()
       .trim(),
-    quality: QUALITY,
-    codec: CODEC,
+    quality: args.preset.quality,
+    codec: args.preset.codec,
     note: "Most of the original video metadata is preserved (framerate, subtitles, resolution) it is just some lossy compression.",
   },
   date: new Date().toISOString(),

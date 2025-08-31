@@ -1,7 +1,7 @@
 import z, { prettifyError } from "zod";
-import { parseArgs, type ParseArgsOptionsType } from "util";
+import { parseArgs } from "util";
 import { zodVerifyPath } from "./utils";
-import { Glob } from "bun";
+import { PRESETS } from "./constants";
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -17,6 +17,9 @@ const { values } = parseArgs({
       type: "boolean",
       default: false,
     },
+    preset: {
+      type: "string",
+    },
   },
   strict: true,
   allowPositionals: true,
@@ -26,9 +29,12 @@ const argsSchema = z.object({
   source: z.string({ error: "Invalid source path" }).superRefine(zodVerifyPath),
   clone: z.string().superRefine(zodVerifyPath),
   clean: z.boolean(),
+  preset: z
+    .enum(Object.keys(PRESETS) as (keyof typeof PRESETS)[])
+    .transform((type) => PRESETS[type]),
 });
 
-export async function getArgs(): Promise<z.infer<typeof argsSchema>> {
+async function getArgs(): Promise<z.infer<typeof argsSchema>> {
   const maybeArgs = await argsSchema.safeParseAsync(values);
 
   if (!maybeArgs.success) {
@@ -37,3 +43,5 @@ export async function getArgs(): Promise<z.infer<typeof argsSchema>> {
 
   return maybeArgs.data;
 }
+
+export const args = await getArgs();

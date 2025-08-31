@@ -1,6 +1,6 @@
 import { $ } from "bun";
 import { join, basename, dirname, extname } from "path";
-import { CODEC, QUALITY } from "./constants";
+import { args } from "./args";
 
 const videos: ReadonlySet<string> = new Set([
   ".mp4",
@@ -22,7 +22,7 @@ async function compressVideo(pathString: string): Promise<void> {
   const name = basename(pathString);
   const compressedFilePath = join(dir, `TEMP-${name}`);
 
-  await $`HandBrakeCLI -i ${pathString} -o ${compressedFilePath} -e ${CODEC} -q ${QUALITY} --all-audio --all-subtitles --subtitle-burned=none --audio-copy-mask aac,ac3,mp3,dts --audio-fallback ffac3`.quiet();
+  await $`HandBrakeCLI -i ${pathString} -o ${compressedFilePath} -e ${args.preset.codec} -q ${args.preset.codec} --all-audio --all-subtitles --subtitle-burned=none --audio-copy-mask aac,ac3,mp3,dts --audio-fallback ffac3`.quiet();
   await $`rm ${pathString}`;
   await $`mv ${compressedFilePath} ${pathString}`;
 }
