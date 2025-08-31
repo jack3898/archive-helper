@@ -22,7 +22,7 @@ async function compressVideo(pathString: string): Promise<void> {
   const name = basename(pathString);
   const compressedFilePath = join(dir, `TEMP-${name}`);
 
-  await $`HandBrakeCLI -i ${pathString} -o ${compressedFilePath} -e ${args.preset.codec} -q ${args.preset.codec} --all-audio --all-subtitles --subtitle-burned=none --audio-copy-mask aac,ac3,mp3,dts --audio-fallback ffac3`.quiet();
+  await $`HandBrakeCLI -i ${pathString} -o ${compressedFilePath} -e ${args.preset.codec} -q ${args.preset.quality} --all-audio --all-subtitles --subtitle-burned=none --audio-copy-mask aac,ac3,mp3,dts --audio-fallback ffac3`.quiet();
   await $`rm ${pathString}`;
   await $`mv ${compressedFilePath} ${pathString}`;
 }
